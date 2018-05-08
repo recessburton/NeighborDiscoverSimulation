@@ -1,0 +1,12 @@
+0	distance_r_p	q
+1	distance_r_t	q
+2	distance_p_t	q
+3	rssi_r_p	q
+4	rssi_r_t	q
+5	com_r_p	q
+6	com_r_t	q
+7	com_p_t	q
+8	com_r_p_t	q
+9	max_rssi	q
+10	avg_rssi	q
+11	noise_thre	q
