@@ -9,10 +9,11 @@
     + 基本的基于组的邻居发现协议
 - 基本朴素推荐协议
     + 基本的确定性发现协议
+- Disco协议
 
-Version: V0.1
+Version: V0.2
 
-Date: 2018-5-8
+Date: 2018-5-9
 
 Author: Y.T.C.
 

@@ -26,7 +26,10 @@ class Node:
         yield env.timeout(self.boot_shift)
         # print("%s node %s booted" % (env.now, self.nodeid))
         self.active = True
-        env.process(self.start_dutycycle(env))
+        if env.protocol == 'Disco':
+            env.process(self.start_dutycycle_disco(env))
+        else:
+            env.process(self.start_dutycycle(env))
 
     def proactive(self, env, delay):
         self.active = True
@@ -45,6 +48,25 @@ class Node:
             self.active = False
             yield env.timeout(1.0 / (self.dutycycle / 100) * env.TIME_SLOT)  # sleep slots = 1/dutycycle
             # print("%s node %s active" % (env.now, self.nodeid))
+
+    def start_dutycycle_disco(self, env):
+        # Disco protocol dutycycle
+        self.prime = env.primes[int(8 * random.random())]
+        i = 0
+        while True:
+            # send probe message both in the beginning and the end
+            # to be compatible with unaligned slots
+            if i == 0:
+                self.active = True
+                self.send_neighbor_probe(env)
+                yield env.timeout(env.TIME_SLOT)
+                self.send_neighbor_probe(env)
+                self.active = False
+            else:
+                yield env.timeout(env.TIME_SLOT)
+            i += 1
+            if i == self.prime:
+                i = 0
 
     def send_neighbor_probe(self, env):
         """
@@ -68,8 +90,10 @@ class Node:
     def send_referring_msg(self, env, target, presentees):
         target.recvd_referring_msg(env, presentees)
 
-    def neighbor_refer(self, env, message, protocol):
+    def neighbor_refer(self, env, message):
         if not self.neighbors.__len__():
+            return
+        if env.protocol == 'Naive' or env.protocol == 'Disco':
             return
         presentees = []
         for nodeid in self.neighbors:
@@ -80,7 +104,7 @@ class Node:
             if nodeid in message.source_node.neighbors: # presentee already in target
                 continue
             node = NeighborMathTool.get_node_by_id(env.nodes, nodeid)
-            if protocol == 'Smart-ref':
+            if env.protocol == 'Smart-ref':
                 predict_data = NeighborMathTool.predict_data_prepare(self,
                                                                      node, message.source_node, env.NOISE_THRE,
                                                                      env.TRANS_POWER, env.MIN_RCV_RSSI)
@@ -88,12 +112,10 @@ class Node:
                     continue
                 if env.classifier.predict(predict_data)[0]:
                     presentees.append(node)
-            if protocol == 'Group-based':
+            if env.protocol == 'Group-based':
                 if NeighborMathTool.neighborhood_prob(self,node, message.source_node, env.NOISE_THRE,
                                                     env.TRANS_POWER, env.MIN_RCV_RSSI) >= 0.25:
                     presentees.append(node)
-            if protocol == 'Disco':
-                pass
         if not presentees:
             self.send_referring_msg(env, message.source_node, presentees)
 
@@ -116,7 +138,7 @@ class Node:
             #print("%s node %s: " % (env.now, self.nodeid), self.neighbors)
             #print("%s node %s:%d" % (env.now, self.nodeid, self.neighbors.__len__()))
             #pass
-            self.neighbor_refer(env, message, 'Smart-ref')
+            self.neighbor_refer(env, message)
 
     def recvd_referring_msg(self, env, presentees):
         for presentee in presentees:
