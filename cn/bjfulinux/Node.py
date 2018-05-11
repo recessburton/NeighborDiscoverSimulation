@@ -15,7 +15,7 @@ class Node:
         # {'2':{rssi:-83.4, sub_neighbors:{'3':-50.3, '6':-61,...(邻居的邻居)...}, ...(其它邻居)...}
         self.neighbors = {}
         self.active = False
-        self.nodeid, self.x, self.y, self.power, self.dutycycle = nodeid, x, y, power, dutycycle
+        self.nodeid, self.x, self.y, self.power, self.dutycycle = nodeid, int(x), int(y), power, dutycycle
         # print("%s node %s deployed at (%s, %s) with power %s, dutycycle: %s%%"
         #      % (env.now, nodeid, x, y, power, dutycycle))
         env.process(self.random_boot(env))

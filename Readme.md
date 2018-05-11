@@ -11,9 +11,9 @@
     + 基本的确定性发现协议
 - Disco协议
 
-Version: V0.2
+Version: V0.3 优化节点坐标生成方式
 
-Date: 2018-5-9
+Date: 2018-5-11
 
 Author: Y.T.C.
 

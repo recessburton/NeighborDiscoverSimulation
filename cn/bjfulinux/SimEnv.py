@@ -33,12 +33,19 @@ class SimEnv(simpy.Environment):
 
     def deploy_nodes(self):
         # add random nodes in region
+        # 产生100个互不相等在一定范围内的坐标集
+        pos_set = set()
+        while pos_set.__len__() < 101:
+            random.seed(time.time() + random.random())
+            x = str(random.randint(0, 50)) # from 0 to 50
+            y = str(random.randint(0, 50))
+            pos_set.add(x+'|'+y)
+        pos_list = list(pos_set)
         for nodeid in range(1, 101):
             random.seed(time.time() + random.random())
             dutycycle = random.randint(int(self.DUTYCYCLE_LOWER), int(self.DUTYCYCLE_UPPER))
-            x = random.random() * 50  # x in [0, 50]
-            y = random.random() * 50  # y in [0, 50]
-            node = Node(self, str(nodeid), str(x), str(y), self.TRANS_POWER, dutycycle)
+            x, y = pos_list[nodeid].split('|')
+            node = Node(self, str(nodeid), x, y, self.TRANS_POWER, dutycycle)
             self.nodes.append(node)
 
 
