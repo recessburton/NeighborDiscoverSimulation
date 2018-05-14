@@ -4,7 +4,7 @@ from cn.bjfulinux.Predictor import Predictor
 from cn.bjfulinux.NeighborMathTool import NeighborMathTool
 from cn.bjfulinux.Neigbhor_discover_finished import Neighbor_discover_finished
 import random
-import simpy
+from cn.bjfulinux.NeighborLogWR import NeighborLogWR
 
 
 protocols = ['Smart-ref', 'Group-based', 'Naive', 'Disco']
@@ -31,20 +31,23 @@ if protocol == 'Smart-ref':
 print('\nStart simulate ...')
 
 # Single Run
-'''
+
 noise_thre = round(2 * random.random(), 2)  # 随机噪声上限
 env = SimEnv(noise_thre)
 env.env_init(conf, protocol, classifier)
 env.deploy_nodes()
+env.log_writer = NeighborLogWR(protocol)
+env.log_writer.openfile('a+')
 try:
     env.run(until=sim_time)
     NeighborMathTool.all_nodes_nei_num(env, True)
 except Neighbor_discover_finished as e:
     pass
 env.nodes = []
+env.log_writer.close()
 del env
 exit(0)
-'''
+
 
 # Muli-times
 

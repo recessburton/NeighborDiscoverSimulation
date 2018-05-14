@@ -17,6 +17,7 @@ class SignalMath:
         RSSI simplified calculate
         """
         distance = SignalMath.cal_distance(node1, node2)
+        #print(str(node1.nodeid), node1.x, node1.y, "|", str(node2.nodeid),node2.x, node2.y)
         if distance > 8:
             rssi = float(trans_power) - 58.5 - 10 * 3.3 * math.log10(distance)
         else:

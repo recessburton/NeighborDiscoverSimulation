@@ -1,5 +1,7 @@
 ## Python中WSN邻居发现协议仿真平台
 
+### ——用于展示
+
 基于Simpy离散事件仿真器，实现了WSN中的邻居发现协议，
 支持
 - Smart-ref
@@ -11,9 +13,9 @@
     + 基本的确定性发现协议
 - Disco协议
 
-Version: V0.2
+Version: V0.3
 
-Date: 2018-5-9
+Date: 2018-5-11
 
 Author: Y.T.C.
 
