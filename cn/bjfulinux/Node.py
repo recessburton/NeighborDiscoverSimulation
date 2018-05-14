@@ -2,8 +2,6 @@
 from cn.bjfulinux.Message import Message
 import random
 import time
-import math
-from cn.bjfulinux.SignalMath import SignalMath
 from cn.bjfulinux.NeighborMathTool import NeighborMathTool
 
 
@@ -27,13 +25,14 @@ class Node:
         # print("%s node %s booted" % (env.now, self.nodeid))
         self.active = True
         if env.protocol == 'Disco':
+            self.primes = env.primes[random.randint(0, 5)]
             env.process(self.start_dutycycle_disco(env))
         else:
             env.process(self.start_dutycycle(env))
 
     def proactive(self, env, delay):
         self.active = True
-        yield env.timeout(env.TIME_SLOT) # active slot = 1
+        yield env.timeout(env.TIME_SLOT + delay)
         self.active = False
 
     def start_dutycycle(self, env):
@@ -51,22 +50,24 @@ class Node:
 
     def start_dutycycle_disco(self, env):
         # Disco protocol dutycycle
-        self.prime = env.primes[int(8 * random.random())]
-        i = 0
+        #self.prime = env.primes[int(8 * random.random())]
+        i = 1
         while True:
             # send probe message both in the beginning and the end
             # to be compatible with unaligned slots
-            if i == 0:
+            if i%self.primes[0] == 0 or i%self.primes[1] == 0:
                 self.active = True
                 self.send_neighbor_probe(env)
                 yield env.timeout(env.TIME_SLOT)
                 self.send_neighbor_probe(env)
                 self.active = False
             else:
+                self.active = False
                 yield env.timeout(env.TIME_SLOT)
+                self.active = False
             i += 1
-            if i == self.prime:
-                i = 0
+            if i > self.primes[0]*self.primes[1]:
+                i = 1
 
     def send_neighbor_probe(self, env):
         """
@@ -97,11 +98,11 @@ class Node:
             return
         presentees = []
         for nodeid in self.neighbors:
-            if nodeid == message.source_node.nodeid: # pass target
+            if nodeid == message.source_node.nodeid:  # pass target
                 continue
-            if nodeid == self.nodeid: # pass self
+            if nodeid == self.nodeid:  # pass self
                 continue
-            if nodeid in message.source_node.neighbors: # presentee already in target
+            if nodeid in message.source_node.neighbors:  # presentee already in target
                 continue
             node = NeighborMathTool.get_node_by_id(env.nodes, nodeid)
             if env.protocol == 'Smart-ref':
@@ -113,12 +114,11 @@ class Node:
                 if env.classifier.predict(predict_data)[0]:
                     presentees.append(node)
             if env.protocol == 'Group-based':
-                if NeighborMathTool.neighborhood_prob(self,node, message.source_node, env.NOISE_THRE,
-                                                    env.TRANS_POWER, env.MIN_RCV_RSSI) >= 0.25:
+                if NeighborMathTool.neighborhood_prob(self, node, message.source_node, env.NOISE_THRE,
+                                                      env.TRANS_POWER, env.MIN_RCV_RSSI) >= 0.25:
                     presentees.append(node)
-        if not presentees:
+        if presentees:
             self.send_referring_msg(env, message.source_node, presentees)
-
 
     def receive(self, env, message, rssi):
         if not self.active:
@@ -135,13 +135,13 @@ class Node:
         # print("%s node %s: " % (env.now, self.nodeid), self.neighbors)
         # print("%s node %s:%d" % (env.now, self.nodeid, self.neighbors.__len__()))
         if self.NEIGHBOR_ADDED:
-            #print("%s node %s: " % (env.now, self.nodeid), self.neighbors)
-            #print("%s node %s:%d" % (env.now, self.nodeid, self.neighbors.__len__()))
-            #pass
+            # print("%s node %s: " % (env.now, self.nodeid), self.neighbors)
+            # print("%s node %s:%d" % (env.now, self.nodeid, self.neighbors.__len__()))
+            # pass
+            env.log_writer.writelog(env.now, self.x, self.y, message.source_node.x, message.source_node.y)
             self.neighbor_refer(env, message)
 
     def recvd_referring_msg(self, env, presentees):
         for presentee in presentees:
             # 节点在presentee的sleep_slots+2*active_slot主动醒来就能保证和presentee重叠
-            self.proactive(env, 1.0 / (presentee.dutycycle / 100) * env.TIME_SLOT + 2*env.TIME_SLOT)
-
+            self.proactive(env, 1.0 / (presentee.dutycycle / 100) * env.TIME_SLOT)
