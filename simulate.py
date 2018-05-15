@@ -3,8 +3,10 @@ from cn.bjfulinux.SimEnv import SimEnv
 from cn.bjfulinux.Predictor import Predictor
 from cn.bjfulinux.NeighborMathTool import NeighborMathTool
 from cn.bjfulinux.Neigbhor_discover_finished import Neighbor_discover_finished
+from cn.bjfulinux.NeighborLogWR import NeighborLogWR
 import random
 import simpy
+from tqdm import tqdm
 
 
 protocols = ['Smart-ref', 'Group-based', 'Naive', 'Disco']
@@ -28,7 +30,7 @@ if protocol == 'Smart-ref':
     print(" with classifier:",classifier_name,end="")
 
 
-print('\nStart simulate ...')
+print('\nStart simulate ...',end='\n')
 
 # Single Run
 '''
@@ -47,16 +49,13 @@ exit(0)
 '''
 
 # Muli-times
-
-for i in range(times):
-    if times <= 100:
-        print('\r' + str(int(round(i/times,2)*100)) + '%', end='')
-    elif i % (times // 100) == 0:
-        print('\r' + str(i // (times // 100)) + '%', end='')
+for i in tqdm(range(times), bar_format= "{l_bar} {bar} | {n_fmt}/{total_fmt}"):
     noise_thre = round(2 * random.random(), 2)  # 随机噪声上限
     env = SimEnv(noise_thre)
     env.env_init(conf, protocol, classifier)
     env.deploy_nodes()
+    env.log_writer = NeighborLogWR(protocol)
+    env.log_writer.openfile('a+')
     try:
         env.run(until=sim_time)
         NeighborMathTool.all_nodes_nei_num(env, True)
@@ -64,4 +63,4 @@ for i in range(times):
         pass
     env.nodes = []
     del env
-print("\r100%\nComplete.")
+print("\nComplete.")

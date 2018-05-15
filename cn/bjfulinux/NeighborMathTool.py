@@ -14,7 +14,7 @@ class NeighborMathTool:
             print("INF", str(all_neighbors))
             return
         if all_neighbors>=1500:
-            print(round(env.now, 2), all_neighbors)
+            #print(round(env.now, 2), all_neighbors)
             env.stop()
 
     @staticmethod
